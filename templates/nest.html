@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div>
+    <label for="facility">Facility:</label>
+    <input type="text" list="facilities" name="facility" id="facility" minlength="20"
+        placeholder="Enter name of facility" title="Select Health Facility" {{data["state"]}}>
+    <datalist id="facilities">
+        {% for facility in data['facilities'] %}
+        <option value="{{ facility }}">
+            {% endfor %}
+    </datalist>
+
+
+</div>
+<div>
+    <label for="time">Scheduled Time:</label>
+    <input type="time" name="time" id="time" required>
+
+</div>
+<input type="checkbox" name="multiple" id="multiple">
+<label for="multiple">Multiple Packages</label>
+
+{% endblock %}

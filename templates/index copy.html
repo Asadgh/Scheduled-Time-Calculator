@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>Scheduled Time Calculator</title>
+</head>
+
+<body>
+    <header>
+        <h1 class="heading">Scheduled Time Calculation Tool</h1>
+    </header>
+    <main>
+        <div class="main-cont">
+            <div class="left-cont">
+                <div>
+                    <label for="nests">Select Nest:</label>
+                    <select name="nests" id="nests">
+                        {% for nest in data['nests'] %}
+                            <option value="{{ nest }}">{{nest}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="facility">Facility:</label>
+                    <input type="text" list="facilities" name="facility" id="facility" minlength="20"
+                        placeholder="Enter name of facility" title="Select Health Facility" {{data["state"]}}>
+                    <datalist id="facilities">
+                        {% for facility in data['facilities'] %}
+                        <option value="{{ facility }}">
+                            {% endfor %}
+                    </datalist>
+
+
+                </div>
+                <div>
+                    <label for="time">Scheduled Time:</label>
+                    <input type="time" name="time" id="time" required>
+
+                </div>
+                <input type="checkbox" name="multiple" id="multiple">
+                <label for="multiple">Multiple Packages</label>
+            </div>
+            <div class="right-cont">
+                <h3 class="delivery-site">Delivery Site</h3>
+
+                <div class="results-cont">
+                    <div class="result">
+                        <span class="label">Duration/Time of Flight:</span>
+                        <span class="value">01:45</span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Minimum Delivery Window:</span>
+                        <span class="value">8:00 AM</span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Maximum Delivery Window:</span>
+                        <span class="value">8:00 AM</span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Time To Begin Packing:</span>
+                        <span class="value">8:00 AM</span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Launch Time:</span>
+                        <span class="value">8:00 AM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>By <span>Adamu Sadick</span></p>
+    </footer>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+
+</html>

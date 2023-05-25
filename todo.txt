@@ -1,0 +1,2 @@
+Anomalities with 'Pampawie HC', a facility in Gh6
+Add Loading animation on right container as client waits for server's response

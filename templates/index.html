@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">, 
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='snackbar.css') }}">
+    <title>Scheduled Time Calculator</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var datalist = document.getElementById('facilities');
+            var facility_input = document.getElementById('facility');
+            var time_input = document.getElementById('time');
+            var multiple_check = document.getElementById('multiple');
+
+            var responseData = {
+                'nest': '',
+                'facility': '',
+                'time': '',
+                'multiple': multiple_check.checked
+            };
+
+            var facilities = {{ data['facilities']|tojson }};
+
+            function checkData() {
+                var returnVal = true;
+                Object.keys(responseData).forEach(function (key) {
+                    if (key != 'multiple') {
+                        if (responseData[key] == '') {
+                            returnVal = false;
+                        };
+                    };
+                });
+                return returnVal;
+            };
+
+            function displayOut(resp) {
+                document.getElementById('delivery-site').textContent = resp['facility'];
+                document.getElementById('eta').textContent = resp['flight_time'];
+                document.getElementById('min-window').textContent = resp['min_window'];
+                document.getElementById('max-window').textContent = resp['max_window'];
+                document.getElementById('time-to-pack').textContent = resp['time_to_pack'];
+                document.getElementById('launch-time').textContent = resp['launch_time'];
+
+            }
+            
+            function processData() {
+                if (checkData()) {
+                      
+                    fetch('/api/process', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(responseData),
+                        })
+                        .then(response => response.json())
+                        .then(resp => {
+                            // Process the response data from the server
+                            displayOut(resp)
+                        })
+                        .catch(error => {
+                            // Handle any errors that occur during the request
+                            showSnackbar("Failed To Load Data From Server")
+                            console.error('Error:', error);
+                        });
+                    
+                };
+            };
+
+            multiple_check.addEventListener("change", function () {
+                var state = multiple_check.checked;
+                responseData['multiple'] = state;
+                processData()
+            });
+
+            time_input.addEventListener("change", function () {
+                time = time_input.value;
+
+                if (time != '') {
+                    document.getElementById("time").style.borderColor = 'blue';
+                    responseData['time'] = time;
+                    processData()
+                }
+                else {
+                    document.getElementById("time").style.borderColor = 'red';
+                    responseData['time'] = '';
+                    showSnackbar("Please Select A Valid Time");
+                }
+            });
+
+            facility_input.addEventListener("change", function () {
+                var datalistChildren = datalist.children;
+                var selectedFacility = facility_input.value;
+
+                var options = [];
+
+                for (let i = 0; i < datalistChildren.length; i++) {
+                    // Use RegExp to get id
+                    options.push(datalistChildren[i].value)
+                };
+
+                if (options.includes(selectedFacility)){
+                    document.getElementById("facility").style.borderColor = 'blue';
+
+                    responseData['facility'] = selectedFacility;
+                    processData()
+                }
+                else {
+                    document.getElementById("facility").style.borderColor = 'red';
+
+                    responseData['facility'] = '';
+
+                    showSnackbar("Please Select A Valid Facility");
+                }
+            });
+        
+            function showSnackbar(str) {
+                var snackbar = document.getElementById("snackbar");
+                snackbar.textContent = str;
+                snackbar.className = "show";
+                setTimeout(function () { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
+
+            };
+
+        document.getElementById("nests").addEventListener("change", function () {
+            var selectedValue = this.value;
+
+            if (selectedValue === '--Select--') {
+                document.getElementById("nests").style.borderColor = 'red';
+
+                showSnackbar("Please Select A Valid Nest");
+                
+                facility_input.disabled = true;
+                document.getElementById("facility").style.borderColor = 'black';
+                facility_input.value = '';
+
+                responseData['nest'] = '';
+            }
+            else {
+                document.getElementById("nests").style.borderColor = 'blue';
+                facility_input.disabled = false;
+                facility_input.value = '';
+                document.getElementById("facility").style.borderColor = 'black';
+
+                responseData['nest'] = selectedValue;
+                processData()
+
+                var selectedFacilities = facilities[selectedValue];
+
+                while (datalist.firstChild) {
+                    datalist.removeChild(datalist.firstChild);
+                }
+
+                selectedFacilities.forEach(function (facility) {
+                    var option = document.createElement('option');
+                    const result = facility;
+
+                    option.value = result;
+                    datalist.appendChild(option);
+                });
+            }
+        });
+    });
+    </script>
+</head>
+
+<body>
+    <header>
+        <h1 class="heading">Scheduled Time Calculation Tool</h1>
+    </header>
+    <main>
+        <div class="main-cont">
+            <div class="left-cont">
+                <div>
+                    <label for="nests">Select Nest:</label>
+                    <select name="nests" id="nests">
+                        {% for nest in data['nests'] %}
+                        <option value="{{ nest }}">{{nest}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="facility">Facility:</label>
+                    <input type="text" list="facilities" name="facility" id="facility" maxlength="100"
+                        placeholder="Enter name of facility" title="Select Health Facility" disabled>
+                    <datalist id="facilities"></datalist>
+                </div>
+                <div>
+                    <label for="time">Scheduled Time:</label>
+                    <input type="time" name="time" id="time">
+
+                </div>
+                <input type="checkbox" name="multiple" id="multiple">
+                <label for="multiple">Multiple Packages</label>
+            </div>
+            <div class="right-cont">
+                <h3 class="delivery-site" id="delivery-site"></h3>
+
+                <div class="results-cont">
+                    <div class="result">
+                        <span class="label">Duration/Time of Flight:</span>
+                        <span class="value" id="eta"></span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Minimum Delivery Window:</span>
+                        <span class="value" id="min-window"></span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Maximum Delivery Window:</span>
+                        <span class="value" id="max-window"></span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Time To Begin Packing:</span>
+                        <span class="value" id="time-to-pack"></span>
+                    </div>
+                    <div class="result">
+                        <span class="label">Launch Time:</span>
+                        <span class="value" id="launch-time"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p id="snackbar"></p>
+    </main>
+    <footer>
+    </footer>
+</body>
+
+</html>
